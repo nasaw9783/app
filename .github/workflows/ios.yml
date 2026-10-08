@@ -1,0 +1,48 @@
+name: Build iOS
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  IOS_FRAMEWORK: net10.0-ios
+  CONFIGURATION: Release
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10'
+
+      - name: Install iOS workload
+        run: dotnet workload install ios
+
+      - name: Restore NuGet packages
+        run: dotnet restore Stratum.iOS/Stratum.iOS.csproj
+
+      - name: Build Stratum iOS
+        run: |
+          dotnet build Stratum.iOS/Stratum.iOS.csproj \
+            -c $CONFIGURATION \
+            -f $IOS_FRAMEWORK \
+            /p:RuntimeIdentifier=ios-arm64 \
+            /p:ServerAddress=none
+
+      - name: Upload iOS Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stratum-iOS
+          path: Stratum.iOS/bin/${{ env.CONFIGURATION }}/${{ env.IOS_FRAMEWORK }}/**
