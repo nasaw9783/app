@@ -16,9 +16,14 @@ namespace Stratum.iOS
         [Export("application:didFinishLaunchingWithOptions:")]
         public bool FinishedLaunching(UIApplication application, NSDictionary launchOptions)
         {
+            var logPath = System.IO.Path.Combine(
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments),
+                "events.log"
+            );
+
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.NSLog()
+                .WriteTo.File(logPath, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             Log.Information("Stratum iOS launching");

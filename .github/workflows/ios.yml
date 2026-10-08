@@ -33,12 +33,23 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore Stratum.iOS/Stratum.iOS.csproj
 
-      - name: Build Stratum iOS
+      - name: Build Stratum iOS (Simulator)
+        run: |
+          dotnet build Stratum.iOS/Stratum.iOS.csproj \
+            -c $CONFIGURATION \
+            -f $IOS_FRAMEWORK \
+            /p:RuntimeIdentifier=iossimulator-arm64 \
+            /p:ServerAddress=none
+
+      - name: Build Stratum iOS (Device - Unsigned)
         run: |
           dotnet build Stratum.iOS/Stratum.iOS.csproj \
             -c $CONFIGURATION \
             -f $IOS_FRAMEWORK \
             /p:RuntimeIdentifier=ios-arm64 \
+            /p:CodesignKey="" \
+            /p:CodesignProvision="" \
+            /p:CodesignRequireProvisioning=false \
             /p:ServerAddress=none
 
       - name: Upload iOS Build Artifacts

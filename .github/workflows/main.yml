@@ -35,7 +35,10 @@ jobs:
         run: $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install platform-tools
 
       - name: Restore NuGet packages
-        run: dotnet restore
+        run: |
+          dotnet restore Stratum.Droid/Stratum.Droid.csproj
+          dotnet restore Stratum.WearOS/Stratum.WearOS.csproj
+          dotnet restore Stratum.Test/Stratum.Test.csproj
 
       - name: Run tests
         run: dotnet test --configuration $CONFIGURATION --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage Stratum.Test/Stratum.Test.csproj
