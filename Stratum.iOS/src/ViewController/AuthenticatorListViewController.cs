@@ -34,7 +34,6 @@ namespace Stratum.iOS.ViewController
 
         private List<Authenticator> _allAuthenticators = new();
         private List<Authenticator> _filteredAuthenticators = new();
-        private readonly Dictionary<string, IGenerator> _generators = new();
 
         public AuthenticatorListViewController(Database database)
         {
@@ -175,13 +174,6 @@ namespace Stratum.iOS.ViewController
             try
             {
                 _allAuthenticators = await _authService.GetAllAsync();
-                _generators.Clear();
-
-                foreach (var auth in _allAuthenticators)
-                {
-                    _generators[auth.Secret] = GeneratorFactory.Create(auth);
-                }
-
                 FilterAccounts(_searchController?.SearchBar?.Text);
             }
             catch (Exception ex)
@@ -238,19 +230,16 @@ namespace Stratum.iOS.ViewController
             {
                 if (_tableView.CellAt(indexPath) is AuthenticatorCell cell && cell.Authenticator != null)
                 {
-                    if (_generators.TryGetValue(cell.Authenticator.Secret, out var generator))
-                    {
-                        cell.UpdateCode(generator);
-                    }
+                    cell.UpdateCode();
                 }
             }
         }
 
         private void OnAccountCopied(Authenticator auth)
         {
-            if (_generators.TryGetValue(auth.Secret, out var generator))
+            try
             {
-                var code = generator.GenerateCode();
+                var code = auth.GetCode();
                 UIPasteboard.General.String = code;
 
                 var feedback = new UIImpactFeedbackGenerator(UIImpactFeedbackStyle.Medium);
@@ -258,6 +247,10 @@ namespace Stratum.iOS.ViewController
                 feedback.ImpactOccurred();
 
                 ShowToast($"Copied code for {auth.Issuer ?? auth.Username}");
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to copy code");
             }
         }
 
@@ -323,13 +316,7 @@ namespace Stratum.iOS.ViewController
                 var cell = (AuthenticatorCell)tableView.DequeueReusableCell(AuthenticatorCell.CellId, indexPath);
                 var auth = _parent._filteredAuthenticators[indexPath.Row];
 
-                if (!_parent._generators.TryGetValue(auth.Secret, out var generator))
-                {
-                    generator = GeneratorFactory.Create(auth);
-                    _parent._generators[auth.Secret] = generator;
-                }
-
-                cell.Bind(auth, generator);
+                cell.Bind(auth);
                 cell.OnCopied = _parent.OnAccountCopied;
 
                 return cell;

@@ -39,6 +39,7 @@ namespace Stratum.iOS
             builder.RegisterType<IosSecureStorage>().SingleInstance();
             builder.RegisterType<IosBiometricService>().SingleInstance();
             builder.RegisterType<IosAssetProvider>().As<IAssetProvider>().SingleInstance();
+            builder.RegisterType<IosIconResolver>().As<IIconResolver>().SingleInstance();
 
             builder.RegisterType<StrongBackupEncryption>().As<IBackupEncryption>().SingleInstance();
             builder.RegisterType<LegacyBackupEncryption>().As<IBackupEncryption>().SingleInstance();

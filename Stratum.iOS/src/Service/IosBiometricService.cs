@@ -38,17 +38,17 @@ namespace Stratum.iOS.Service
             {
                 try
                 {
-                    var (success, error) = await context.EvaluatePolicyAsync(
+                    var result = await context.EvaluatePolicyAsync(
                         LAPolicy.DeviceOwnerAuthenticationWithBiometrics,
                         reason
                     );
 
-                    if (!success && error != null)
+                    if (!result.Item1 && result.Item2 != null)
                     {
-                        _log.Warning("Biometric authentication failed: {Message}", error.LocalizedDescription);
+                        _log.Warning("Biometric authentication failed: {Message}", result.Item2.LocalizedDescription);
                     }
 
-                    return success;
+                    return result.Item1;
                 }
                 catch (Exception ex)
                 {

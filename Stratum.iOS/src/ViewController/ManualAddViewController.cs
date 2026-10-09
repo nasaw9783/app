@@ -14,7 +14,7 @@ namespace Stratum.iOS.ViewController
         private readonly UITextField _issuerField = new();
         private readonly UITextField _usernameField = new();
         private readonly UITextField _secretField = new();
-        private readonly UISegmentedControl _typeSegment = new("TOTP", "HOTP");
+        private readonly UISegmentedControl _typeSegment = new(new[] { "TOTP", "HOTP" });
 
         public event Action OnAuthenticatorAdded;
 
@@ -96,7 +96,7 @@ namespace Stratum.iOS.ViewController
                 Username = _usernameField.Text?.Trim(),
                 Secret = secret,
                 Type = _typeSegment.SelectedSegment == 0 ? AuthenticatorType.Totp : AuthenticatorType.Hotp,
-                Algorithm = HashAlgorithm.Sha1,
+                Algorithm = Stratum.Core.Generator.HashAlgorithm.Sha1,
                 Digits = 6,
                 Period = 30
             };

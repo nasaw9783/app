@@ -102,7 +102,7 @@ namespace Stratum.iOS.View
             });
         }
 
-        public void Bind(Authenticator authenticator, IGenerator generator)
+        public void Bind(Authenticator authenticator)
         {
             Authenticator = authenticator;
 
@@ -110,21 +110,37 @@ namespace Stratum.iOS.View
             _accountLabel.Text = !string.IsNullOrWhiteSpace(authenticator.Issuer) ? authenticator.Username : "";
             _accountLabel.Hidden = string.IsNullOrWhiteSpace(_accountLabel.Text);
 
-            UpdateCode(generator);
+            UpdateCode();
         }
 
-        public void UpdateCode(IGenerator generator)
+        public void UpdateCode()
         {
-            if (generator == null) return;
+            if (Authenticator == null) return;
 
-            var code = generator.GenerateCode();
-            _codeLabel.Text = FormatCode(code);
+            try
+            {
+                var code = Authenticator.GetCode();
+                _codeLabel.Text = FormatCode(code);
+            }
+            catch
+            {
+                _codeLabel.Text = "--- ---";
+            }
 
-            var remaining = generator.GetRemainingSeconds();
-            var period = Authenticator.Period > 0 ? Authenticator.Period : 30;
-            var progress = (float)remaining / period;
+            if (Authenticator.Type.GetGenerationMethod() == GenerationMethod.Time)
+            {
+                var period = Authenticator.Period > 0 ? Authenticator.Period : 30;
+                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                var remaining = (int)(period - (now % period));
+                var progress = (float)remaining / period;
 
-            _progressView.SetProgress(progress, remaining);
+                _progressView.SetProgress(progress, remaining);
+                _progressView.Hidden = false;
+            }
+            else
+            {
+                _progressView.Hidden = true;
+            }
         }
 
         private static string FormatCode(string code)

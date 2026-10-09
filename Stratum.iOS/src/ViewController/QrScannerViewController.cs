@@ -119,7 +119,8 @@ namespace Stratum.iOS.ViewController
 
             try
             {
-                var parseResult = UriParser.Parse(qrContent);
+                var iconResolver = Dependencies.Resolve<IIconResolver>();
+                var parseResult = UriParser.ParseStandardUri(qrContent, iconResolver);
                 if (parseResult?.Authenticator != null)
                 {
                     var authService = Dependencies.Resolve<IAuthenticatorService>();

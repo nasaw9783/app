@@ -15,7 +15,7 @@
         <RuntimeIdentifiers>iossimulator-x64;iossimulator-arm64</RuntimeIdentifiers>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <RuntimeIdentifiers>ios-arm64</RuntimeIdentifiers>
+        <RuntimeIdentifiers>ios-arm64;iossimulator-arm64;iossimulator-x64</RuntimeIdentifiers>
         <EnableCodeSigning>false</EnableCodeSigning>
         <CodesignRequireProvisioning>false</CodesignRequireProvisioning>
     </PropertyGroup>
