@@ -16,6 +16,8 @@
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <RuntimeIdentifiers>ios-arm64</RuntimeIdentifiers>
+        <EnableCodeSigning>false</EnableCodeSigning>
+        <CodesignRequireProvisioning>false</CodesignRequireProvisioning>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Autofac" Version="9.1.0" />

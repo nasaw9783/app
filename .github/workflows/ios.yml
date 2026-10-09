@@ -28,7 +28,8 @@ jobs:
           dotnet-version: '10'
 
       - name: Install iOS workload
-        run: dotnet workload install ios
+        run: |
+          sudo $(which dotnet) workload install ios
 
       - name: Restore NuGet packages
         run: dotnet restore Stratum.iOS/Stratum.iOS.csproj
@@ -39,7 +40,8 @@ jobs:
             -c $CONFIGURATION \
             -f $IOS_FRAMEWORK \
             /p:RuntimeIdentifier=iossimulator-arm64 \
-            /p:ServerAddress=none
+            /p:ServerAddress=none \
+            /p:EnableCodeSigning=false
 
       - name: Build Stratum iOS (Device - Unsigned)
         run: |
@@ -47,6 +49,7 @@ jobs:
             -c $CONFIGURATION \
             -f $IOS_FRAMEWORK \
             /p:RuntimeIdentifier=ios-arm64 \
+            /p:EnableCodeSigning=false \
             /p:CodesignKey="" \
             /p:CodesignProvision="" \
             /p:CodesignRequireProvisioning=false \

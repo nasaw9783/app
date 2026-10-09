@@ -18,7 +18,7 @@ using Serilog;
 
 namespace Stratum.iOS.ViewController
 {
-    public class AuthenticatorListViewController : UIViewController, IUITableViewDataSource, IUITableViewDelegate, IUISearchResultsUpdating
+    public class AuthenticatorListViewController : UIViewController, IUISearchResultsUpdating
     {
         private readonly ILogger _log = Log.ForContext<AuthenticatorListViewController>();
         private readonly Database _database;
@@ -102,8 +102,6 @@ namespace Stratum.iOS.ViewController
         {
             _tableView = new UITableView(CGRect.Empty, UITableViewStyle.InsetGrouped)
             {
-                DataSource = this,
-                Delegate = this,
                 TranslatesAutoresizingMaskIntoConstraints = false,
                 RowHeight = UITableView.AutomaticDimension,
                 EstimatedRowHeight = 110,
@@ -112,6 +110,7 @@ namespace Stratum.iOS.ViewController
             };
 
             _tableView.RegisterClassForCellReuse(typeof(AuthenticatorCell), AuthenticatorCell.CellId);
+            _tableView.Source = new TableSource(this);
 
             View.AddSubview(_tableView);
 
@@ -210,6 +209,7 @@ namespace Stratum.iOS.ViewController
             _tableView.ReloadData();
         }
 
+        [Export("updateSearchResultsForSearchController:")]
         public void UpdateSearchResultsForSearchController(UISearchController searchController)
         {
             FilterAccounts(searchController.SearchBar.Text);
@@ -244,34 +244,6 @@ namespace Stratum.iOS.ViewController
                     }
                 }
             }
-        }
-
-        public nint NumberOfSections(UITableView tableView) => 1;
-
-        public nint RowsInSection(UITableView tableView, nint section) => _filteredAuthenticators.Count;
-
-        public UITableViewCell GetCell(UITableView tableView, NSIndexPath indexPath)
-        {
-            var cell = (AuthenticatorCell)tableView.DequeueReusableCell(AuthenticatorCell.CellId, indexPath);
-            var auth = _filteredAuthenticators[indexPath.Row];
-
-            if (!_generators.TryGetValue(auth.Secret, out var generator))
-            {
-                generator = GeneratorFactory.Create(auth);
-                _generators[auth.Secret] = generator;
-            }
-
-            cell.Bind(auth, generator);
-            cell.OnCopied = OnAccountCopied;
-
-            return cell;
-        }
-
-        public void RowSelected(UITableView tableView, NSIndexPath indexPath)
-        {
-            tableView.DeselectRow(indexPath, true);
-            var auth = _filteredAuthenticators[indexPath.Row];
-            OnAccountCopied(auth);
         }
 
         private void OnAccountCopied(Authenticator auth)
@@ -331,6 +303,44 @@ namespace Stratum.iOS.ViewController
             var settingsVc = new SettingsViewController();
             var nav = new UINavigationController(settingsVc);
             PresentViewController(nav, true, null);
+        }
+
+        private class TableSource : UITableViewSource
+        {
+            private readonly AuthenticatorListViewController _parent;
+
+            public TableSource(AuthenticatorListViewController parent)
+            {
+                _parent = parent;
+            }
+
+            public override nint NumberOfSections(UITableView tableView) => 1;
+
+            public override nint RowsInSection(UITableView tableview, nint section) => _parent._filteredAuthenticators.Count;
+
+            public override UITableViewCell GetCell(UITableView tableView, NSIndexPath indexPath)
+            {
+                var cell = (AuthenticatorCell)tableView.DequeueReusableCell(AuthenticatorCell.CellId, indexPath);
+                var auth = _parent._filteredAuthenticators[indexPath.Row];
+
+                if (!_parent._generators.TryGetValue(auth.Secret, out var generator))
+                {
+                    generator = GeneratorFactory.Create(auth);
+                    _parent._generators[auth.Secret] = generator;
+                }
+
+                cell.Bind(auth, generator);
+                cell.OnCopied = _parent.OnAccountCopied;
+
+                return cell;
+            }
+
+            public override void RowSelected(UITableView tableView, NSIndexPath indexPath)
+            {
+                tableView.DeselectRow(indexPath, true);
+                var auth = _parent._filteredAuthenticators[indexPath.Row];
+                _parent.OnAccountCopied(auth);
+            }
         }
     }
 }
